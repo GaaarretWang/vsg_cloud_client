@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package videoencoding;
+
+service VideoEncodingService {
+  rpc GetString(Request) returns (Response);
+}
+
+message Request {
+  repeated double viewMatrix = 1;
+  bytes real_color = 2; // 彩色图像数据
+  bytes real_depth = 3; // 彩色图像数据
+}
+
+message Response {
+  bytes color_image = 1; // 彩色图像数据
+}
