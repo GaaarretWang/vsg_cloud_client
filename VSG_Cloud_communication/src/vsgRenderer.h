@@ -257,7 +257,18 @@ public:
         // -----------------------设置相机参数------------------------------//
         double radius = 2000.0; // 固定观察距离
         auto viewport = vsg::ViewportState::create(0, 0, cadWindowTraits->width, cadWindowTraits->height);
-        auto perspective = vsg::Perspective::create(60.0, static_cast<double>(cadWindowTraits->width) / static_cast<double>(cadWindowTraits->height), nearFarRatio * radius, radius * 10.0);
+        // auto perspective = vsg::Perspective::create(60.0, static_cast<double>(640) / static_cast<double>(480), nearFarRatio * radius, radius * 10.0);
+        float fx = 386.52199190267083;//焦距(x轴上)
+		float fy = 387.32300428823663;//焦距(y轴上)
+		float cx = 326.5103569741365;//图像中心点(x轴)
+		float cy = 237.40293732598795;//图像中心点(y轴)
+		float w=640;
+		float h=480;
+		float near = 0.1f;
+		float far = 655.35f;
+
+        auto perspective = vsg::Perspective::create(fx, fy, cx, cy, w, h, near, far);
+
         vsg::dvec3 centre = {0.0, 0.0, 0.0};                    // 固定观察点
         vsg::dvec3 eye = centre + vsg::dvec3(0.0, radius, 0.0); // 固定相机位置
         vsg::dvec3 up = {0.0, 0.0, 1.0};                        // 固定观察方向
@@ -272,7 +283,7 @@ public:
             viewer->addWindow(window);
             auto view = vsg::View::create(camera, cadScenegraph);
             auto renderGraph = vsg::RenderGraph::create(window, view);
-            renderGraph->clearValues[0].color = {{0.8f, 0.8f, 0.8f, 1.f}};
+            renderGraph->clearValues[0].color = {{0.f, 0.f, 0.f, 1.f}};
             auto commandGraph = vsg::CommandGraph::create(window);
             commandGraph->addChild(renderGraph);
             viewer->assignRecordAndSubmitTaskAndPresentation({commandGraph});
@@ -298,7 +309,7 @@ public:
         Env_viewer->addWindow(Env_window);
         auto Env_view = vsg::View::create(camera, envScenegraph);              //共用一个camera，改变一个window的视角，另一个window视角也会改变
         auto Env_renderGraph = vsg::RenderGraph::create(Env_window, Env_view); //如果用Env_window会报错
-        Env_renderGraph->clearValues[0].color = {{0.8f, 0.8f, 0.8f, 1.f}};
+        Env_renderGraph->clearValues[0].color = {{0.f, 0.f, 0.f, 1.f}};
         auto Env_commandGraph = vsg::CommandGraph::create(Env_window); //如果用Env_window会报错
         Env_commandGraph->addChild(Env_renderGraph);
         Env_viewer->assignRecordAndSubmitTaskAndPresentation({Env_commandGraph});
@@ -320,6 +331,26 @@ public:
         Shadow_viewer->addEventHandlers({vsg::CloseHandler::create(Shadow_viewer)});
 
         //----------------------------------------------------------------窗口4----------------------------------------------------------//
+        convertimage = new ConvertImage(width, height);
+        vsgColorImage = vsg::ubvec3Array2D::create(width, height);
+        vsgDepthImage = vsg::ushortArray2D::create(width, height);
+        vsgColorImage->properties.format = VK_FORMAT_R8G8B8_UNORM;
+        vsgColorImage->properties.dataVariance = vsg::DYNAMIC_DATA;
+        vsgDepthImage->properties.format = VK_FORMAT_R16_UNORM;
+        vsgDepthImage->properties.dataVariance = vsg::DYNAMIC_DATA;
+        // for (int i = 0; i < width * height; i++)
+        // {
+        //     auto color_pixel = static_cast<vsg::ubvec3*>(vsgColorImage->dataPointer(i));
+        //     uint16_t* depth_pixel = static_cast<uint16_t*>(vsgDepthImage->dataPointer(i));
+
+        //     color_pixel->x = 0;
+        //     color_pixel->y = 0;
+        //     color_pixel->z = 0;
+        //     depth_pixel = 0;
+        // }
+        // vsgColorImage->dirty();
+        // vsgDepthImage->dirty();
+
         for (int i = 0; i < 6; i++)
         {
             storageImages[i] = createStorageImage(i % 2);
@@ -356,7 +387,7 @@ public:
         // convertDepthImageInfo = vsg::ImageInfo::create(vsg::Sampler::create(), vsg::createImageView(*context, storageImages[i], VK_IMAGE_ASPECT_COLOR_BIT), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
         
         vsg::ref_ptr<vsg::ShaderSet> mergeShader = cad.buildIntgShader("../data/shaders/merge.vert", "../data/shaders/merge.frag");
-        cad.buildIntgNode(intgScenegraph, mergeShader, imageInfos, convertDepthImageInfo); //读取几何信息1
+        cad.buildIntgNode(intgScenegraph, mergeShader, imageInfos, vsgColorImage, vsgDepthImage); //读取几何信息1
 
         double mergeradius = 2000.0; // 固定观察距离
         auto mergeviewport = vsg::ViewportState::create(0, 0, intgWindowTraits->width, intgWindowTraits->height);
@@ -392,13 +423,6 @@ public:
         Env_screenshotHandler = ScreenshotHandler::create();
         screenshotHandler = ScreenshotHandler::create();
 
-        convertimage = new ConvertImage(width, height);
-        vsgColorImage = vsg::ubvec3Array2D::create(width, height);
-        vsgDepthImage = vsg::ushortArray2D::create(width, height);
-        vsgColorImage->properties.format = VK_FORMAT_R8G8B8_UNORM;
-        vsgColorImage->properties.dataVariance = vsg::DYNAMIC_DATA;
-        vsgDepthImage->properties.format = VK_FORMAT_R16_UNORM;
-        vsgDepthImage->properties.dataVariance = vsg::DYNAMIC_DATA;
     }
 
     bool render(std::vector<std::vector<uint8_t>> &color, std::vector<double>& lookAtVector, const std::string& real_color, const std::string& real_depth){
@@ -411,7 +435,7 @@ public:
             double radius = 2000.0; // 固定观察距离
             double nearFarRatio = 0.001;       //近平面和远平面之间的比例
             auto viewport = vsg::ViewportState::create(0, 0, 640, 480);
-            auto perspective = vsg::Perspective::create(60.0, static_cast<double>(640) / static_cast<double>(480), nearFarRatio * radius, radius * 10.0);
+            auto perspective = vsg::Perspective::create(60.0, static_cast<double>(640) / static_cast<double>(480), 0.1, 655.35);
             auto lookAt = vsg::LookAt::create(eye, centre, up);
             auto tmp_camera = vsg::Camera::create(perspective, lookAt, viewport);
             camera->viewMatrix = tmp_camera->viewMatrix;
@@ -426,8 +450,11 @@ public:
                 color_pixel->x = color_pixels[i * 3];
                 color_pixel->y = color_pixels[i * 3 + 1];
                 color_pixel->z = color_pixels[i * 3 + 2];
-                depth_pixel = depth_pixels + i;
+                *depth_pixel = depth_pixels[i];
             }
+            // uint16_t* depth_pixel = static_cast<uint16_t*>(vsgDepthImage->Data());
+            // depth_pixel = depth_pixels;
+
             vsgColorImage->dirty();
             vsgDepthImage->dirty();
 

@@ -24,14 +24,15 @@ void main()
     ivec2 screenSize = ivec2(640, 480);
     vec2 texCoord = vec2(fragCoord * 1.f) / vec2(screenSize);
 
-    float intCadDepth = texture(cadDepth, texCoord).r;
+    float intCadDepth = 0.1 / (texture(cadDepth, texCoord).r * 655.25 + 0.1);
     float intPlaneDepth = texture(planeDepth, texCoord).r;
     float intShadowDepth = texture(shadowDepth, texCoord).r;
 
-    if(intCadDepth > intPlaneDepth)
+    if(intCadDepth <= intPlaneDepth)
         outColor.rgb = texture(cadColor, texCoord).rgb;
     else
         outColor.rgb = texture(planeColor, texCoord).rgb * texture(shadowColor, texCoord).rgb;
-    //outColor.rgb = vec3(texture(planeDepth, texCoord).r * 1000000);
+
+    //outColor.rgb = vec3(intCadDepth);
     outColor.a = 1.f;
 }

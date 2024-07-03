@@ -16,6 +16,7 @@ public:
     int height;
     CUdeviceptr dpFrame = 0;
     std::vector<std::vector<double>> camera_pos;
+    std::vector<std::string> camera_pos_timestamp;
     int frame =  0;
     NvEncoderWrapper* m_encoder = new NvEncoderWrapper();
     int64_t frame_count = 0;
@@ -57,9 +58,14 @@ public:
             std::vector<double> values;
             std::vector<double> lookatvalues;
             std::string value;
+            int count = 0;
             while(Linestream >> value){
                 // std::cout << "value" << value << "=" << std::stof(value);
-                values.push_back(std::stod(value));
+                if(count == 0)
+                    camera_pos_timestamp.push_back(value);
+                else
+                    values.push_back(std::stod(value));
+                count ++;
             }
             // pos, up, forward => centre, eye, up
             lookatvalues.push_back(values[0] + values[6]);
@@ -100,9 +106,12 @@ public:
             lookAtSend[6 + i] = lookAtCamera->up[i];
         }
 
-        std::ifstream color_file("../data/slamData/color/0.png", std::ios::binary | std::ios::app);
+        std::string colorPath = "/home/lab/workspace/swb/data_save/cmake-build-debug/dataset3/color/" + camera_pos_timestamp[frame] + ".png";
+        std::string depthPath = "/home/lab/workspace/swb/data_save/cmake-build-debug/dataset3/depth/" + camera_pos_timestamp[frame] + ".png";
+
+        std::ifstream color_file(colorPath, std::ios::binary | std::ios::app);
         std::vector<uint8_t> color_buffer((std::istreambuf_iterator<char>(color_file)), std::istreambuf_iterator<char>());
-        std::ifstream depth_file("../data/slamData/depth/0.png", std::ios::binary | std::ios::app);
+        std::ifstream depth_file(depthPath, std::ios::binary | std::ios::app);
         std::vector<uint8_t> depth_buffer((std::istreambuf_iterator<char>(depth_file)), std::istreambuf_iterator<char>());
 
         auto start = std::chrono::high_resolution_clock::now();

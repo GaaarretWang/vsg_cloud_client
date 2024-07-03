@@ -130,8 +130,8 @@ private:
     std::unordered_map<std::string, uint32_t> protoTriangleNum;
     std::unordered_map<int, uint32_t> materialIndex;
     std::unordered_map<std::string, int> instanceIndex;                                 //flatbuffer instanceID, i
-    std::unordered_map<std::string, treeNode> nodePtr;        //¼ÇÂ¼ID¶ÔÓ¦µÄ½Úµã
-    std::unordered_set<std::string> added;                                              //¼ÇÂ¼Ìí¼Óµ½Ê÷ÖÐµÄ½Úµã
+    std::unordered_map<std::string, treeNode> nodePtr;        //ï¿½ï¿½Â¼IDï¿½ï¿½Ó¦ï¿½Ä½Úµï¿½
+    std::unordered_set<std::string> added;                                              //ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ÐµÄ½Úµï¿½
     flatbuffers::FlatBufferBuilder builder_out;
 public:
     int Nodenumber;
@@ -145,15 +145,15 @@ public:
 
     vsg::ref_ptr<vsg::StateGroup> stateGroup_total = vsg::StateGroup::create();
     
-    //¼ÓÔØÄ£ÐÍ
+    //ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½
     void buildnode(const std::string& path, bool fullNormal, vsg::ref_ptr<vsg::Group> scene, vsg::ref_ptr<vsg::ShaderSet> shader);
-    void buildIntgNode(vsg::ref_ptr<vsg::Group> scene, vsg::ref_ptr<vsg::ShaderSet> shader, vsg::ref_ptr<vsg::ImageInfo>* imageInfos, vsg::ref_ptr<vsg::ImageInfo> buildIntgNode);
+    void buildIntgNode(vsg::ref_ptr<vsg::Group> scene, vsg::ref_ptr<vsg::ShaderSet> shader, vsg::ref_ptr<vsg::ImageInfo>* imageInfos, vsg::ref_ptr<vsg::Data> real_color, vsg::ref_ptr<vsg::Data> real_depth);
     void buildPlaneNode(vsg::ref_ptr<vsg::Group> scene, vsg::ref_ptr<vsg::ShaderSet> shader);
 
     void explode();
     void recover();
 
-    //¼ÓÔØ×ÅÉ«Æ÷
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½
     vsg::ref_ptr<vsg::ShaderSet> buildShader(std::string vert, std::string frag);
     vsg::ref_ptr<vsg::ShaderSet> buildIntgShader(std::string vert, std::string frag);
 };
